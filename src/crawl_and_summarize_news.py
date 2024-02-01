@@ -15,11 +15,13 @@ import os
 urllib3.disable_warnings()
 from typing import Literal
 from transformers import pipeline
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as Soup
+
 from src.utils import check_path, take_device
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
+    RecursiveUrlLoader,
     NewsURLLoader,
 )
 from unstructured.cleaners.core import clean_extra_whitespace
@@ -31,6 +33,47 @@ from langchain.prompts import PromptTemplate
 from ctransformers import AutoModelForCausalLM, AutoTokenizer
 from langchain_openai import OpenAI
 from datetime import datetime
+
+import warnings
+import contextlib
+
+import requests
+from urllib3.exceptions import InsecureRequestWarning
+from transformers import AutoFeatureExtractor, ResNetForImageClassification
+import torch
+import os
+old_merge_environment_settings = requests.Session.merge_environment_settings
+
+@contextlib.contextmanager
+def no_ssl_verification():
+    opened_adapters = set()
+
+    def merge_environment_settings(self, url, proxies, stream, verify, cert):
+        # Verification happens only once per connection so we need to close
+        # all the opened adapters once we're done. Otherwise, the effects of
+        # verify=False persist beyond the end of this context manager.
+        opened_adapters.add(self.get_adapter(url))
+
+        settings = old_merge_environment_settings(self, url, proxies, stream, verify, cert)
+        settings['verify'] = False
+
+        return settings
+
+    requests.Session.merge_environment_settings = merge_environment_settings
+
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', InsecureRequestWarning)
+            yield
+    finally:
+        requests.Session.merge_environment_settings = old_merge_environment_settings
+
+        for adapter in opened_adapters:
+            try:
+                adapter.close()
+            except:
+                pass
+            
 
 
 
@@ -60,138 +103,66 @@ class GoogleTranslator:
 
 
 class NewsScraper:
-    '''
-    Scape News from https://vnexpress.net/ 
-    How to run selenium on linux
-    https://cloudbytes.dev/snippets/run-selenium-and-chrome-on-wsl2#:~:text=With%20Selenium%20libraries%2C%20Python%20can,using%20Python%20and%20Selenium%20webdriver.
+    def __init__(self, max_depth:int = 2, 
+                    root_urls:list = ["https://znews.vn/", "https://cafef.vn/"]):
+        
+        self.max_depth = max_depth
+        self.root_urls = root_urls
+        self.formatted_docs = []
+
+
+    def search_news(self)-> list : 
+
+        for url in self.root_urls:
+            print ('Crawling url:', url)
+            loader = RecursiveUrlLoader(
+                url=url, max_depth=self.max_depth, 
+                extractor=lambda x: Soup(x, "html.parser").text,
+                prevent_outside =True, 
+            )
+            with no_ssl_verification():
+                docs = loader.load()
+
+        return docs
+
+
+    def extract_urls(self, docs):
+        # Step 2: Initialize an empty list to store the extracted URLs
+        news_url_list = []
+        
+        # Step 3: Loop through each document in the 'docs' list
+        for doc in docs:
+            url = doc.metadata['source']
+            extension = url.split('.')[-1].lower()
+            
+            if  (extension in ['html', 'chn']) and (len(url)  > 50 ):
+            
+                # Step 6: Append the extracted URL to the 'news_url_list'
+                news_url_list.append(url)
+
+        return news_url_list
     
-    '''
-    def __init__(self):
-        pass
-
-    def search_stock_news(self, symbol:str = "SSI",
-                          date_format:Literal['day', 'week', 'month', 'year']='day')-> list : 
-        symbol = symbol.upper()
-        url = f"https://timkiem.vnexpress.net/?search_f=&q={symbol}&date_format={date_format}&"
-
-        # Send a GET request to the webpage
-        response = requests.get(url)
-        # Check if the request was successful (status code 200)
-        attemp = 0
-        max_attemps = 3
-        news_urls = []
-
-        while attemp <= max_attemps:
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                # Assuming the news articles are wrapped in <article> elements
-                articles = soup.find_all('article', class_='item-news-common')
-                # Iterate through each article and extract the URL
-                for article in articles:
-                    url = article.get('data-url')
-                    if url:
-                        news_urls.append(url)
-
-                break
-                
-            except Exception as e:
-                print(f"An error occurred: {str(e)}")
-                print("Resetting the Scraper in 10 seconds...")
-                time.sleep(10)  
-                attemp += 1
-                if attemp > max_attemps:
-                    print("Max attempts reached. Exiting.")
-                    break
-
-        return news_urls
-
-    def search_top_news_cafef(self)-> list:
-
-        url = 'https://cafef.vn/'
-        # Send a GET request to the webpage
-        response = requests.get(url)
-        # Check if the request was successful (status code 200)
-        attemp = 0
-        max_attemps = 3
-        news_urls = []
-
-        while attemp <= max_attemps:
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-
-                # Find top news elements
-                top_news_elements = soup.find_all('div', class_='top_noibat')
-                top_news = top_news_elements[0] if top_news_elements else None
-
-                top_news_links = top_news.find_all('a')
-                # Extract and print the links
-                for link in top_news_links:
-                    news_link = link.get('href')
-                    news_link = f'{url}{news_link}'
-                    news_urls.append(news_link)
-
-                    # Convert set to list
-                    news_urls = list(set(news_urls))
-                break
-                
-            except Exception as e:
-                print(f"An error occurred: {str(e)}")
-                print("Resetting the Scraper in 10 seconds...")
-                time.sleep(10)  
-                attemp += 1
-                if attemp > max_attemps:
-                    print("Max attempts reached. Exiting.")
-                    break
-
-        return news_urls
     
-    def search_top_news_vnexpress(self)-> list:
-
-        url = 'https://vnexpress.net/kinh-doanh'
-        # Send a GET request to the webpage
-        response = requests.get(url)
-        # Check if the request was successful (status code 200)
-        attemp = 0
-        max_attemps = 3
-        news_urls = []
-
-        while attemp <= max_attemps:
-            try:
-                # Parse the HTML content
-                soup = BeautifulSoup(response.text, 'html.parser')
-
-                # Find news elements
-                news_elements = soup.find_all('h3', class_='title_news')
-                news_elements.append(soup.find('section', class_='section_topstory_folder'))
-
-                # Extract and return the URLs
-                news_urls = [element.find('a').get('href') for element in news_elements if element.find('a')]
-                break
-                
-            except Exception as e:
-                print(f"An error occurred: {str(e)}")
-                print("Resetting the Scraper in 10 seconds...")
-                time.sleep(10)  
-                attemp += 1
-                if attemp > max_attemps:
-                    print("Max attempts reached. Exiting.")
-                    break
-
-        return news_urls
-    
-    def search_top_news(self)-> list:
-        news_urls = self.search_top_news_cafef()
-        news_urls.extend(self.search_top_news_vnexpress())
-        return news_urls
-    
-    def take_text_from_link(self, news_url:str) -> str :
+    def take_news_elements(self, news_url:str) -> str :
         news_url = [news_url]
         loader = NewsURLLoader(urls=news_url, 
                             post_processors=[clean_extra_whitespace],)
-        news_text = loader.load()
-        news_text = news_text[0].page_content
+        with no_ssl_verification():
+            news = loader.load()
+        return news
+
+    def take_text_from_link(self, news_url:str) -> str :
+        news = self.take_news_elements(news_url)
+        news_text = news[0].page_content
         return  news_text
     
+    def get_all_news(self):
+        docs = self.search_news()
+        news_url_list = self.extract_urls(docs)
+        for url in news_url_list:
+            news = self.take_news_elements(url)
+            self.formatted_docs.append(news)
+        return self.formatted_docs
 
 class NewsSummarizer:
     def __init__(self, summarizer = pipeline("summarization", 
@@ -227,11 +198,5 @@ class NewsSummarizer:
 
 if __name__ == "__main__":
 
-    symbol = 'SSI'
-    date_format='year'
-    news_scraper = NewsScraper()
-    news_list = news_scraper.search_stock_news(symbol=symbol, date_format=date_format)
-    news = news_scraper.take_text_from_link(news_url=news_list[0])
-    new_summarizer = NewsSummarizer()
-    sum_text = new_summarizer.summary_news(news= news)
+    print('haha')
     
