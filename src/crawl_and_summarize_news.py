@@ -112,7 +112,7 @@ class NewsScraper:
 
 
     def search_news(self)-> list : 
-
+        docs = [] 
         for url in self.root_urls:
             print ('Crawling url:', url)
             loader = RecursiveUrlLoader(
@@ -121,7 +121,7 @@ class NewsScraper:
                 prevent_outside =True, 
             )
             with no_ssl_verification():
-                docs = loader.load()
+                docs.extend(loader.load())
 
         return docs
 
