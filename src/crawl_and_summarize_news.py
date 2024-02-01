@@ -198,5 +198,7 @@ class NewsSummarizer:
 
 if __name__ == "__main__":
 
-    print('haha')
-    
+    news_scraper = NewsScraper()
+    formatted_docs = news_scraper.get_all_news()
+    print(formatted_docs[2][0].page_content)
+    print(formatted_docs[2][0].metadata)
