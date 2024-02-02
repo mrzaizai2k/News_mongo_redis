@@ -164,6 +164,7 @@ class NewsScraper:
             self.formatted_docs.append(news)
         return self.formatted_docs
 
+
 class NewsSummarizer:
     def __init__(self, summarizer = pipeline("summarization", 
                                              model="Falconsai/text_summarization", device = take_device()),
@@ -206,9 +207,11 @@ class NewsSummarizer:
 
         Output is with the summary text
         '''
+
         text = full_news['page_content']
         full_news['summary_text'] = self.summary_news(news = text)
         return full_news
+
 
     
 
