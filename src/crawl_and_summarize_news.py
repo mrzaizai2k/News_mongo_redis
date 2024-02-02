@@ -183,17 +183,33 @@ class NewsSummarizer:
         return sum_text
     
     def summary_news(self, news:str, chunk_overlap:str = 0)->str:
+        with no_ssl_verification():
+            text_splitter = TokenTextSplitter(chunk_size=self.max_length * 2,
+                                            chunk_overlap=chunk_overlap)
+            
+            trans_news = self.translator.translate(text=news, to_lang='en')
+            text_chunks = text_splitter.split_text(trans_news)
+            summary_documents = [self.summary_text(chunk) for chunk in text_chunks]
+            summary_text = '\n'.join(summary_documents)
 
-        text_splitter = TokenTextSplitter(chunk_size=self.max_length * 2,
-                                           chunk_overlap=chunk_overlap)
-        
-        trans_news = self.translator.translate(text=news, to_lang='en')
-        text_chunks = text_splitter.split_text(trans_news)
-        summary_documents = [self.summary_text(chunk) for chunk in text_chunks]
-        summary_text = '\n'.join(summary_documents)
-
-        summary_text = self.translator.translate(text=summary_text, to_lang='vi')
+            summary_text = self.translator.translate(text=summary_text, to_lang='vi')
         return summary_text
+    
+    def summary_news_for_redis(self, full_news:dict, content_element:str = 'page_content'):
+        '''
+        full_news is like
+        {'title': 'Lì xì hơn 6.000 cuốn sách tại Đường sách Tết 2024',
+            'link': 'https://znews.vn/li-xi-hon-6-nghin-cuon-sach-tai-duong-sach-tet-2024-post1457886.html',
+            'authors': ['Đông Miên'],
+            'publish_date': datetime.datetime(2024, 1, 31, 7, 0, 41, tzinfo=tzoffset(None, 25200)),
+            'page_content': 'Ban tổ chức}
+
+        Output is with the summary text
+        '''
+        text = full_news['page_content']
+        full_news['summary_text'] = self.summary_news(news = text)
+        return full_news
+
     
 
 if __name__ == "__main__":
