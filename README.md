@@ -18,8 +18,7 @@ Reference:
 1. Cài docker
 
         docker run -d --name redis-stack -p 6379:6379 -p 8001:8001 redis/redis-stack:latest
-        docker exec -it <3 chữ cái đầu của docker container_id> sh
-        redis-cli
+        docker exec -it redis-stack redis-cli
         ping
         --> Ra Pong là ok
 
