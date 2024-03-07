@@ -8,6 +8,12 @@ Trello: https://trello.com/b/yiKSwU9w/data-engineering
 - `config`: config file `.yaml`
 - `notebook`: Là các file chứa example code
 
+## Mongo Atlas
+https://cloud.mongodb.com/v2/65ca3ed0e555e205e6522116#/clusters/detail/Cluster0
+
+Username: nhatanhhuynh1@gmail.com
+Password: HNA@nyu1204
+
 ## Set up Redis
 
 Reference:
