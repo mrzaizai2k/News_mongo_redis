@@ -114,6 +114,7 @@ S3 Versioning is a feature that enables users to keep multiple variants of an ob
 Data Preservation: Versioning preserves every version of every object stored in a bucket, providing protection against unintended user actions and application failures.
 Unique Version ID: Each object added to a versioned bucket is assigned a unique version ID by Amazon S3, allowing for precise identification and retrieval.
 
+![image](https://github.com/mrzaizai2k/News_mongo_redis/assets/40959407/fa654bc2-c42d-4727-b791-28d2e1f6c5df)
 
 
 ## How to solve them (s3)
