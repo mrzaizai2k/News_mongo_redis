@@ -190,5 +190,43 @@ Suitability for Data Types:
 Text: S3 can efficiently store large quantities of text data, such as logs or raw text files. However, for applications that require complex queries or frequent updates to text data, the flexibility of MongoDB might be more appropriate.
 Images and Videos: S3 is particularly well-suited for storing and serving large files such as images and videos. Its high durability, availability, and built-in features like versioning and lifecycle management make it an ideal choice for media hosting, content delivery networks, and data archiving.
 
+### Data Preprocessing
 
+- In s3
+A file is split into smaller blocks.
+Each block is compressed using compression algorithms.
+To ensure security, each block is encrypted before it is sent to cloud storage.
+Blocks are uploaded to the cloud storage.
+
+- In GridFs
+  https://www.geopits.com/blog/mongodb-gridfs.html
+
+  Instead of storing a file in a single document, GridFS divides the file into parts, or chunks [1], and stores each chunk as a separate document. By default, GridFS uses a default chunk size of 255 kB; that is, GridFS divides a file into chunks of 255 kB with the exception of the last chunk. The last chunk is only as large as necessary. Similarly, files that are no larger than the chunk size only have a final chunk, using only as much space as needed plus some additional metadata.
+
+GridFS uses two collections to store files. One collection stores the file chunks, and the other stores file metadata. The section 
+GridFS Collections
+ describes each collection in detail.
+
+When you query GridFS for a file, the driver will reassemble the chunks as needed. You can perform range queries on files stored through GridFS. You can also access information from arbitrary sections of files, such as to "skip" to the middle of a video or audio file.
+
+![image](https://github.com/mrzaizai2k/News_mongo_redis/assets/40959407/b5a65e54-ed13-4e4a-b2e2-9a17882a28de)
+
+### Scaling 
+
+MongoDB	Amazon S3
+As the data grows, MongoDB quickly and equally distributed the data across a cluster of computers. This process is called "Sharding". Growing amounts of data are easily handled with MongoDB's scalability.	There is no set limit on the volume of data or the number of objects that can be stored in an S3 bucket. S3 offers infinite scalability. A bucket created in s3 has a 5T storage limit
+
+Horizontal Scaling
+Horizontal scaling, involving the expansion of storage space and processing nodes, presents different challenges and cost considerations for MongoDB and Amazon S3:
+
+MongoDB: Horizontal scaling with MongoDB necessitates increased processor and memory resources as additional nodes are added to the cluster. This scaling approach can lead to escalating costs, particularly as the infrastructure grows. Consequently, the cost-effectiveness of MongoDB diminishes with the expansion of nodes. However, for local deployments, solutions like MinIO may offer a more cost-effective horizontal scaling option compared to MongoDB, leveraging cheaper local resources.
+
+Amazon S3: Scalability with Amazon S3 is generally more cost-effective due to its native support for horizontal scaling and auto-scaling capabilities. S3's infrastructure allows for seamless expansion of storage space and processing capacity as demand grows. While MinIO hosted locally may provide a cheaper horizontal scaling alternative, it lacks the auto-scaling features and global infrastructure of Amazon S3, which could be crucial for applications with high availability and performance requirements.
+
+Vertical Scaling
+Vertical scaling, involving increasing the capacity of individual nodes, also presents distinct cost implications for MongoDB and Amazon S3:
+
+MongoDB: As the pressure on the storage system increases, the cost of vertical scaling with MongoDB may become more significant. MongoDB requires additional processor and memory resources to handle higher loads efficiently. This approach can lead to higher costs as the infrastructure needs to be continuously upgraded to meet growing demands.
+
+Amazon S3: Vertical scaling considerations with Amazon S3 are less pronounced compared to MongoDB. S3's architecture abstracts away the underlying infrastructure, allowing for seamless expansion of storage capacity without the need for manual adjustments to individual nodes. However, as with any cloud service, costs may still increase linearly with storage usage, but without the need for upfront investment in hardware upgrades
 ## Compare mongo vs SQL db
