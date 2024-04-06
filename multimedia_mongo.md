@@ -138,5 +138,57 @@ Unique Version ID: Each object added to a versioned bucket is assigned a unique 
 - APIs and Integration: S3 provides a simple and intuitive RESTful API for interacting with storage objects programmatically. This API allows developers to integrate S3 storage capabilities into their applications, enabling seamless data storage, retrieval, and management in the cloud.
 
 ## Compare S3 vs mongo
+### High Performance
+
+MongoDB	Amazon S3
+The NoSQL nature of MongoDB makes data operations quick and easy. Without compromising the data integrity, data can be quickly stored, updated and retrieved.	AWS S3 provides actions such as multi-Part payload which gives low latency of 100–200 milliseconds which automatically grows to high request rates.
+
+Resources
+GridFS, a specification for storing and retrieving large files such as images, video files, and audio files with MongoDB, can impact performance based on the memory and processor capabilities of the hosting server. For smaller files accessed infrequently, GridFS might exhibit slightly superior performance to AWS S3 due to its streamlined operation within the database itself. However, for larger files or higher frequency access, S3's dedicated infrastructure might provide better performance due to its optimized data retrieval paths and global distribution networks.
+
+Latency
+The location of the storage platform relative to the application hosting environment plays a critical role in determining the actual performance experienced by end-users:
+
+Amazon Hosted Applications: For applications running on the Amazon ecosystem, S3 offers lower latency due to optimized paths within the Amazon network, making it a superior choice for such setups.
+
+On-Premises Applications: When the application is hosted on-premises, the choice between MongoDB and S3 becomes more nuanced. A MongoDB instance on the same network as the application would likely outperform S3 and even MinIO (a high-performance, AWS S3-compatible storage system) due to the absence of significant network latency.
+
+Internet-Transferred Data: For applications where data must be transferred over the internet to a managed MongoDB instance or to S3, the network quality and distance can significantly impact performance. In such cases, S3's global infrastructure potentially offers more consistent and faster data access, particularly for applications already hosted within the Amazon ecosystem.
+
+Processor and Memory Costs
+MongoDB's architecture demands more in terms of memory and processing power compared to AWS S3. This is particularly relevant when dealing with the storage of large files at a high frequency. AWS S3, designed as an object storage service, is optimized for such tasks and thus incurs lower costs related to processing and memory usage. Therefore, for high-volume storage needs, S3 emerges as a more cost-effective choice.
+
+Disk Space
+The cost of disk space is another critical factor. If the primary concern is the storage of large files without a pressing need for speed, the decision boils down to the comparative costs of disk space. This requires a personalized calculation, considering the specific costs of disk space for your MongoDB setup versus the pricing tiers of AWS S3. For those who can manage with slower access speeds, the choice may hinge on which option offers the more economical storage per gigabyte.
+
+Data Transfer Costs
+Data transfer costs can significantly impact the overall cost, especially when storing and accessing large files. Amazon's pricing structure for bandwidth typically represents a higher cost compared to most self-hosted solutions or cloud servers from other providers. This aspect of cost becomes increasingly important with the volume of data transfer involved in large file storage and access. Consequently, for operations where large data transfers are common, a self-hosted MongoDB solution or an alternative cloud provider might offer cost advantages over AWS S3, depending on the specific bandwidth pricing models.
+
+### Compare data type
+BSON
+
+BSON, which stands for Binary JSON (JavaScript Object Notation), is a binary-encoded serialization of JSON-like documents. It is designed to be efficient in space and speed when encoding and decoding data in MongoDB, a popular NoSQL database. BSON extends the JSON model to provide additional data types and to be efficient for encoding and decoding within different languages. 
+Efficient Storage and Retrieval: BSON is designed to be more efficient than JSON in terms of storage space and scan-speed. It allows MongoDB to store types not represented in JSON, such as Date and binary data.
+
+Object Files (in Amazon S3 Context)
+In the context of Amazon S3, an object file refers to any piece of data stored in S3. An S3 object can be any file type - from simple text files and images to complex applications - stored in a flat, scalable storage structure. Unlike BSON, which is a specific data format, S3 objects are essentially binary files without any imposed structure, identified and accessed through keys (file names) within buckets (storage containers). 
+Binary Data Format: S3 objects store data in a raw binary format. This means that S3 can store files in their native formats, be it images, videos, application data, or any other file type, without needing a specific data structure or format
+
+### Data storage
+
+- MongoDB Storage Characteristics:
+Data Model: MongoDB is a document-oriented database that stores data in JSON-like (BSON) documents, allowing for a flexible and dynamic schema. This flexibility is advantageous for storing text and complex hierarchical data, which can change over time.
+Storage Organization: Data in MongoDB is organized into collections and databases. Collections can be thought of as equivalent to tables in a relational database, but without a fixed schema. This organization suits applications that require rapid iteration and where data structures can evolve.
+Suitability for Data Types:
+Text: MongoDB's document model is inherently suited for storing and querying text documents, including JSON, XML, or BSON data, making it a good choice for content management systems, blogging platforms, or any application that handles a lot of variable text data.
+Images and Videos: While MongoDB can store binary data (such as images and videos) using GridFS (when files exceed the BSON-document size limit of 16MB), it's generally not as efficient or cost-effective as using a dedicated object storage service like S3 for large or numerous multimedia files.
+
+- Amazon S3 Storage Characteristics:
+Data Model: S3 is an object storage service that treats data as objects. Each object is stored in a bucket and is identified by a unique key. Objects can contain data in any format (binary), making S3 extremely versatile for storing a wide variety of file types.
+Storage Organization: S3 organizes data into buckets, which are similar to top-level directories. Within each bucket, objects can be further organized with keys that simulate a hierarchical structure (e.g., folder1/subfolder1/file1). Additionally, S3 data is stored across multiple facilities within a region, ensuring high durability and availability.
+Suitability for Data Types:
+Text: S3 can efficiently store large quantities of text data, such as logs or raw text files. However, for applications that require complex queries or frequent updates to text data, the flexibility of MongoDB might be more appropriate.
+Images and Videos: S3 is particularly well-suited for storing and serving large files such as images and videos. Its high durability, availability, and built-in features like versioning and lifecycle management make it an ideal choice for media hosting, content delivery networks, and data archiving.
+
 
 ## Compare mongo vs SQL db
