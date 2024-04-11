@@ -226,7 +226,24 @@ Amazon S3: Scalability with Amazon S3 is generally more cost-effective due to it
 Vertical Scaling
 Vertical scaling, involving increasing the capacity of individual nodes, also presents distinct cost implications for MongoDB and Amazon S3:
 
-MongoDB: As the pressure on the storage system increases, the cost of vertical scaling with MongoDB may become more significant. MongoDB requires additional processor and memory resources to handle higher loads efficiently. This approach can lead to higher costs as the infrastructure needs to be continuously upgraded to meet growing demands.
+MongoDB: As the pressure on the storage system increases, the cost of vertical scaling with MongoDB may become more significant. MongoDB requires additional processor and memory resources to handle higher loads efficiently. This approach can lead to higher costs as the infrastructure needs to be continuously upgraded 
+to meet growing demands.
 
 Amazon S3: Vertical scaling considerations with Amazon S3 are less pronounced compared to MongoDB. S3's architecture abstracts away the underlying infrastructure, allowing for seamless expansion of storage capacity without the need for manual adjustments to individual nodes. However, as with any cloud service, costs may still increase linearly with storage usage, but without the need for upfront investment in hardware upgrades
 ## Compare mongo vs SQL db
+
+## Demo
+The source code is [here]{https://github.com/metwaroi31/demo-mongo/blob/main/gridfs_demo/index.js}
+ we've up an Express.js server to handle file uploads via HTTP POST requests to the '/profile' endpoint to handle file uploads. The uploaded files are stored directly into MongoDB GridFS. The flexibility of Multer allows for handling various upload scenarios, such as single files, multiple files with the same field name, or multiple files with different field names.
+
+
+We import necessary modules: express, multer, and multer-gridfs-storage.
+We define the MongoDB connection URL (url) and the port number (PORT) for the Express server.
+We create a new GridFS storage object (storage) with the specified MongoDB connection URL.
+We configure Multer middleware to use the GridFS storage engine (storage) for handling file uploads.
+We create an instance of the Express application (app).
+
+We define a POST route at '/profile' for handling file uploads.
+We use the upload.single('avatar') middleware to specify that only one file with the field name 'avatar' will be uploaded.
+When a file is successfully uploaded, the server sends a response with the message "image uploaded successfully."
+We start the Express server, listening on the specified port (PORT).
